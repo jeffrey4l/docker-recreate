@@ -14,11 +14,16 @@ def get_version():
     return output.strip()
 
 
+def get_long_description():
+    with open('README.md', 'r') as f:
+        return f.read()
+
+
 setup(
     name='docker-recreate',
     version=get_version(),
     description='Get docker run command from container',
-    long_description='file:README.md',
+    long_description=get_long_description(),
     author='Jeffrey Zhang',
     author_email='zhang.lei.fly@gmail.com',
     url='https://www.github.com/jeffrey4l/docker-recreate',
