@@ -2,3 +2,6 @@
 dist
 build
 *.egg-info
+AUTHORS
+ChangeLog
+MANIFEST
