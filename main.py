@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import io
 import json
-import pprint
 import subprocess
-import sys
+
+try:
+    import yaml
+    has_yaml = True
+except ImportError:
+    has_yaml = False
 
 
 def get_inspect_json(resource):
@@ -13,152 +16,182 @@ def get_inspect_json(resource):
     return json.loads(output)
 
 
-def print_pretty_cmd2(cmds):
-    max_length = 50
-    line_cmds = []
-    line_width = 0
-    first_line = True
-    total = len(cmds)
-    for idx, cmd in enumerate(cmds):
-        line_cmds.append(cmd)
-        line_width += len(cmd)
-        if line_width > max_length or idx == total - 1:
-            if idx < total - 1:
-                line_cmds.append('\\')
-            if not first_line:
-                sys.stdout.write('    ')
-            print(' '.join(line_cmds))
-            line_cmds = []
-            line_width = 0
-            first_line = False
+def get_container(name):
+    return get_inspect_json(name)[0]
 
 
-def print_pretty_cmd3(cmds):
-    line = []
-    for idx, cmd in enumerate(cmds):
-        if line and cmd.startswith('-'):
-            line.append('\\\n')
-            if idx != 0:
-                line.append(' ' * 2)
-        line.append(cmd)
-    print(' '.join(line))
+def get_image(name):
+    return get_inspect_json(name)[0]
 
 
-def format_csv(cmds):
-    return ','.join(cmds)
+class BaseFormatter(object):
+    def __init__(self, cmds):
+        self.cmds = cmds
+
+    def format(self):
+        return
+
+    @classmethod
+    def name(cls):
+        class_name = cls.__name__
+        return class_name[:-len('Formatter')].lower()
 
 
-def format_list(cmds):
-    output = io.StringIO()
-    pprint.pprint(cmds, stream=output)
-    return output.getvalue()
+class CSVFormatter(BaseFormatter):
+    def format(self):
+        return ','.join(self.cmds)
 
 
-def format_json(cmds):
-    return json.dumps(cmds, indent=4)
+class JsonFormatter(BaseFormatter):
+    def format(self):
+        return json.dumps(self.cmds, indent=4)
 
 
-def format_string(cmds):
-    line = []
-    is_param = False
-    for idx, cmd in enumerate(cmds):
-        if is_param and not cmd.startswith('-'):
-            line.append(cmd)
+class OneLineFormatter(BaseFormatter):
+    def format(self):
+        return ' '.join(self.cmds)
+
+
+class StringFormatter(BaseFormatter):
+    def format(self):
+        line = []
+        is_param = False
+        for idx, cmd in enumerate(self.cmds):
+            if is_param and not cmd.startswith('-'):
+                line.append(cmd)
+            else:
+                if idx != 0:
+                    line.append('\\\n')
+                    line.append(' ' * 2)
+                line.append(cmd)
+
+            is_param = cmd.startswith('-')
+        return ' '.join(line)
+
+
+class YamlFormatter(BaseFormatter):
+
+    def format(self):
+        if not has_yaml:
+            raise ValueError('Need YAML module for yaml formatter')
+        return yaml.dump(self.cmds)
+
+
+class Container:
+
+    def __init__(self, container, image=None):
+        self.container = container
+        self._config = container['Config']
+        self._host_config = container['HostConfig']
+        self.image = image
+        self._image_config = image['Config']
+        self._image_host_config = image['ContainerConfig']
+
+    def get_container_name(self):
+        name = self.container['Name']
+        if name and name[0]:
+            name = name[1:]
+        return name
+
+    def get_cmds(self):
+        cmds = ['docker', 'run']
+        if self._config['AttachStdin']:
+            cmds.append('-i')
+        if self._config['AttachStdout'] or self._config['AttachStderr']:
+            cmds.append('-t')
         else:
-            if idx != 0:
-                line.append('\\\n')
-                line.append(' ' * 2)
-            line.append(cmd)
+            cmds.append('-d')
+        if self._host_config['AutoRemove']:
+            cmds.append('--rm')
+        cmds.extend(['--name', self.get_container_name()])
 
-        is_param = cmd.startswith('-')
-    return ' '.join(line)
+        if self._config['Entrypoint'] != self._image_config['Entrypoint']:
+            cmds.extend(['--entrypoint', self._config['Entrypoint']])
+        if self._config['User'] != self._image_config['User']:
+            cmds.extend(['--user', self._config['User']])
 
+        # network mode
+        network_mode = self._host_config['NetworkMode']
+        if network_mode != 'default':
+            cmds.extend(['--network', network_mode])
 
-def parse_container(container):
-    inspect = get_inspect_json(container)
-    data = inspect[0]
+        port_bindings = self._host_config['PortBindings'] or {}
+        # port mapping
+        for target, source in port_bindings.items():
+            host_port = source[0]['HostPort']
+            target_port, protocol = target.split('/', 1)
+            if protocol == 'tcp':
+                target = target_port
+            cmds.extend(['--publish', "%s:%s" % (host_port, target)])
 
-    image_name = data['Config']['Image']
+        # restart policy
+        cmds.extend(['--restart', self._host_config['RestartPolicy']['Name']])
 
-    image = get_inspect_json(image_name)
-    image = image[0]
+        if self._host_config['IpcMode'] != 'private':
+            cmds.extend(['--ipc', self._host_config['IpcMode']])
+        if self._host_config['PidMode']:
+            cmds.extend(['--pid', self._host_config['PidMode']])
+        if self._host_config['Privileged']:
+            cmds.append('--privileged')
 
-    cmds = ['docker', 'run']
-    config = data['Config']
-    host_config = data['HostConfig']
-    if config['AttachStdin']:
-        cmds.append('-i')
-    if config['AttachStdout'] or config['AttachStderr']:
-        cmds.append('-t')
-    else:
-        cmds.append('-d')
-    if host_config['AutoRemove']:
-        cmds.append('--rm')
-    container_name = data['Name']
-    if container_name[0] == '/':
-        container_name = container_name[1:]
-    cmds.extend(['--name', container_name])
-    if config['Entrypoint'] != image['Config']['Entrypoint']:
-        cmds.extend(['--entrypoint', config['Entrypoint']])
-    if config['User'] != image['Config']['User']:
-        cmds.extend(['--user', config['User']])
-    # network mode
-    network_mode = host_config['NetworkMode']
-    if network_mode != 'default':
-        cmds.extend(['--network', network_mode])
+        # environment
+        container_envs = self._config['Env'] or {}
+        image_envs = self._image_config['Env'] or {}
 
-    port_bindings = host_config['PortBindings'] or {}
-    # port mapping
-    for target, source in port_bindings.items():
-        host_port = source[0]['HostPort']
-        target_port, protocol = target.split('/', 1)
-        if protocol == 'tcp':
-            target = target_port
-        cmds.extend(['--publish', "%s:%s" % (host_port, target)])
+        for env in set(container_envs) - set(image_envs):
+            cmds.extend(['-e', env])
 
-    # restart policy
-    cmds.extend(['--restart', host_config['RestartPolicy']['Name']])
+        for bind in self._host_config['Binds'] or []:
+            cmds.extend(['-v', bind])
 
-    if host_config['IpcMode'] != 'private':
-        cmds.extend(['--ipc', host_config['IpcMode']])
-    if host_config['PidMode']:
-        cmds.extend(['--pid', host_config['PidMode']])
-    if host_config['Privileged']:
-        cmds.append('--privileged')
-
-    # environment
-    container_envs = config['Env'] or {}
-    image_envs = image['Config']['Env'] or {}
-
-    for env in set(container_envs) - set(image_envs):
-        cmds.extend(['-e', env])
-
-    for bind in host_config['Binds'] or []:
-        cmds.extend(['-v', bind])
-
-    image_name = data['Config']['Image']
-    cmds.append(image_name)
-    if config['Cmd'] != image['Config']['Cmd']:
-        cmds.extend(config['Cmd'])
-    return cmds
+        image_name = self._config['Image']
+        cmds.append(image_name)
+        if self._config['Cmd'] != self._image_config['Cmd']:
+            cmds.extend(self._config['Cmd'])
+        return cmds
 
 
-FORMATER = {
-    'string': format_string,
-    'list': format_list,
-    'json': format_json,
-    'csv': format_csv,
-}
+def get_formatters():
+    formatters = {}
+
+    for clazz in BaseFormatter.__subclasses__():
+        formatters[clazz.name()] = clazz
+    return formatters
+
+
+def check_container(value):
+    output = subprocess.check_output(
+        ['docker', 'ps', '-q', '--filter',
+         'name=%s' % value, '--format', '{{.Names}}'])
+    if not output:
+        raise argparse.ArgumentTypeError(
+                'Can not found container name "%s"' % value)
+    containers = output.decode('utf8').split()
+    if len(containers) > 1:
+        msg = 'Found multi container for name "%s": %s' % (value, containers)
+        raise argparse.ArgumentTypeError(msg)
+    container_name = containers[0]
+    return container_name
 
 
 def main():
+    formatters = get_formatters()
     parser = argparse.ArgumentParser()
-    parser.add_argument('container', nargs='+')
-    parser.add_argument('--format', '-f', choices=FORMATER.keys(), default='string')
+    parser.add_argument('container', nargs='+', type=check_container)
+    parser.add_argument(
+            '--format',
+            '-f',
+            choices=formatters.keys(),
+            default='string')
+
     conf = parser.parse_args()
-    for container in conf.container:
-        cmds = parse_container(container)
-        print(FORMATER[conf.format](cmds))
+
+    for container_name in conf.container:
+        container = get_container(container_name)
+        image_name = container['Config']['Image']
+        image = get_image(image_name)
+        container_obj = Container(container, image)
+        print(formatters[conf.format](container_obj.get_cmds()).format())
 
 
 if __name__ == "__main__":

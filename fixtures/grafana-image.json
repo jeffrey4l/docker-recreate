@@ -1,0 +1,93 @@
+{
+  "Id": "sha256:38209d2ec29a2e635070c65fc102776646c5aba03573ca09312923d93562c3c7",
+  "RepoTags": [
+    "grafana/grafana:8.0.3"
+    ],
+    "RepoDigests": [],
+    "Parent": "",
+    "Comment": "buildkit.dockerfile.v0",
+    "Created": "2021-06-18T09:38:37.334091898Z",
+    "Container": "",
+    "ContainerConfig": {
+      "Hostname": "",
+      "Domainname": "",
+      "User": "",
+      "AttachStdin": false,
+      "AttachStdout": false,
+      "AttachStderr": false,
+      "Tty": false,
+      "OpenStdin": false,
+      "StdinOnce": false,
+      "Env": null,
+      "Cmd": null,
+      "Image": "",
+      "Volumes": null,
+      "WorkingDir": "",
+      "Entrypoint": null,
+      "OnBuild": null,
+      "Labels": null
+    },
+    "DockerVersion": "",
+    "Author": "",
+    "Config": {
+      "Hostname": "",
+      "Domainname": "",
+      "User": "472",
+      "AttachStdin": false,
+      "AttachStdout": false,
+      "AttachStderr": false,
+      "ExposedPorts": {
+        "3000/tcp": {}
+      },
+      "Tty": false,
+      "OpenStdin": false,
+      "StdinOnce": false,
+      "Env": [
+        "PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "GF_PATHS_CONFIG=/etc/grafana/grafana.ini",
+        "GF_PATHS_DATA=/var/lib/grafana",
+        "GF_PATHS_HOME=/usr/share/grafana",
+        "GF_PATHS_LOGS=/var/log/grafana",
+        "GF_PATHS_PLUGINS=/var/lib/grafana/plugins",
+        "GF_PATHS_PROVISIONING=/etc/grafana/provisioning"
+      ],
+      "Cmd": null,
+      "Image": "",
+      "Volumes": null,
+      "WorkingDir": "/usr/share/grafana",
+      "Entrypoint": [
+        "/run.sh"
+      ],
+      "OnBuild": null,
+      "Labels": null
+    },
+    "Architecture": "amd64",
+    "Os": "linux",
+    "Size": 206149506,
+    "VirtualSize": 206149506,
+    "GraphDriver": {
+      "Data": {
+        "LowerDir": "/home/docker/overlay2/ef0ba1a44bb8e742a0ceed7d5d0990eaea33dc04efc045dac1200493bf7508b6/diff:/home/docker/overlay2/5a93f8ef259ccf82e5eef5f779bcf2ab0587af909f9dcc021b6219f3b5a097ed/diff:/home/docker/overlay2/112461ce85ac17b5e550ead199f6e4d4c7addc1e78c31af567ece452b573dc5f/diff:/home/docker/overlay2/4075694385d4a746b8dc7e916e4ddebae70718c7d78cfd7e1e956b0c6e3dbf84/diff:/home/docker/overlay2/23ae7b1e2c6b76a3b67afda615750a04285208690c908067df460170cb3aa652/diff:/home/docker/overlay2/ea9e223dd64033987aec9554d0a7e33091ac1606ea7c4d2c1308c25294507782/diff:/home/docker/overlay2/1526f2fb047e79977a295199dd064e970da7cdf824c846ca64920349f048b10d/diff",
+        "MergedDir": "/home/docker/overlay2/78b312e5a1143450fc64c8a4420a4c230a4a0c906ff5ce426480a7ffe9a1be7e/merged",
+        "UpperDir": "/home/docker/overlay2/78b312e5a1143450fc64c8a4420a4c230a4a0c906ff5ce426480a7ffe9a1be7e/diff",
+        "WorkDir": "/home/docker/overlay2/78b312e5a1143450fc64c8a4420a4c230a4a0c906ff5ce426480a7ffe9a1be7e/work"
+      },
+      "Name": "overlay2"
+    },
+    "RootFS": {
+      "Type": "layers",
+      "Layers": [
+        "sha256:b2d5eeeaba3a22b9b8aa97261957974a6bd65274ebd43e1d81d0a7b8b752b116",
+        "sha256:9a500d77433f072b0598b429d19cc1662f8826b8a13bd8041bd1e59a6999cc5e",
+        "sha256:65fa209bc50156b08bd38a7da6f1d02dee918b49876189683d529646348306d5",
+        "sha256:8fe59578f75dfca3617577571d4bcd3b18c74e85be2f4210aa0651b3b2fea39f",
+        "sha256:86763fc812237ca3e276f1a923a744d4c08bf054e854abdedd921524bb4674fd",
+        "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+        "sha256:bdf5d9764dbf81f46d25f61647ac9593e88ee10afea87ac3a2033e1450c81fbb",
+        "sha256:d905133a68e9f6f8cb5170d6f53b8558b071b0602562d821c064dc47e7132675"
+      ]
+    },
+    "Metadata": {
+      "LastTagTime": "0001-01-01T00:00:00Z"
+    }
+}
