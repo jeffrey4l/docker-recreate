@@ -182,7 +182,8 @@ def main():
             '--format',
             '-f',
             choices=formatters.keys(),
-            default='string')
+            default='string',
+            help='Output format')
 
     conf = parser.parse_args()
 

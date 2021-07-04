@@ -5,7 +5,6 @@ from setuptools import setup
 
 setup(
     name='docker-recreate',
-    version='1.0.2',
     description='Get docker run command from container',
     author='Jeffrey Zhang',
     author_email='zhang.lei.fly@gmail.com',
@@ -16,4 +15,5 @@ setup(
             'docker-recreate=main:main'
         ]},
     py_modules=['main'],
+    pbr=True
     )

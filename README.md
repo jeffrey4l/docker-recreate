@@ -36,7 +36,7 @@ optional arguments:
   --format {csv,json,oneline,string,yaml}, -f {csv,json,oneline,string,yaml}
 ```
 
-```
+```console
 $ docker-create grafana
 docker \
     run \
