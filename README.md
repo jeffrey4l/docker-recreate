@@ -4,21 +4,20 @@ This is a small tool to print re-create existance docker container run commands.
 
 # Install
 
-```
+```bash
 # through pip
-
 pip install docker-recreate
 
 
 # using curl
-
-curl https://raw.githubusercontent.com/jeffrey4l/docker-recreate/master/main.py -o /usr/local/bin/docker-recreate
+curl https://raw.githubusercontent.com/jeffrey4l/docker-recreate/master/main.py \
+    -o /usr/local/bin/docker-recreate
 chmod +x /usr/local/bin/docker-recreate
 
 
 # for China
-
-curl https://raw.fastgit.org/jeffrey4l/docker-recreate/master/main.py -o /usr/local/bin/docker-recreate
+curl https://raw.fastgit.org/jeffrey4l/docker-recreate/master/main.py \
+    -o /usr/local/bin/docker-recreate
 chmod + /usr/local/bin/docker-recreate
 ```
 
