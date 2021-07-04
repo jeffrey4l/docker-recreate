@@ -1,10 +1,14 @@
 #!/bin/bash
 
 from setuptools import setup
+import os
 import subprocess
 
 
 def get_version():
+    version = os.environ.get('VERSION_NAME', None)
+    if version:
+        return version
     output = subprocess.check_output(['git', 'describe', '--tags'])
     output = output.decode('utf8')
     return output.strip()
