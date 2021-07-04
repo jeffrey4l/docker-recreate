@@ -24,6 +24,7 @@ setup(
     version=get_version(),
     description='Get docker run command from container',
     long_description=get_long_description(),
+    long_description_content_type="text/markdown",
     author='Jeffrey Zhang',
     author_email='zhang.lei.fly@gmail.com',
     url='https://www.github.com/jeffrey4l/docker-recreate',
