@@ -161,7 +161,7 @@ def get_formatters():
 
 def check_container(value):
     output = subprocess.check_output(
-        ['docker', 'ps', '-q', '--filter',
+        ['docker', 'ps', '-a', '-q', '--filter',
          'name=%s' % value, '--format', '{{.Names}}'])
     if not output:
         raise argparse.ArgumentTypeError(
