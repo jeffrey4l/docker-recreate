@@ -113,7 +113,7 @@ class Container:
         # network mode
         network_mode = self._host_config['NetworkMode']
         if network_mode != 'default':
-            cmds.extend(['--network', network_mode])
+            cmds.extend(['--net', network_mode])
 
         port_bindings = self._host_config['PortBindings'] or {}
         # port mapping
@@ -127,7 +127,8 @@ class Container:
         # restart policy
         cmds.extend(['--restart', self._host_config['RestartPolicy']['Name']])
 
-        if self._host_config['IpcMode'] != 'private':
+        ipc_mode = self._host_config['IpcMode']
+        if ipc_mode and ipc_mode != 'private':
             cmds.extend(['--ipc', self._host_config['IpcMode']])
         if self._host_config['PidMode']:
             cmds.extend(['--pid', self._host_config['PidMode']])
