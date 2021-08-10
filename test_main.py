@@ -23,7 +23,7 @@ class MainTest(unittest.TestCase):
         expected = [
             'docker', 'run', '-d',
             '--name', 'grafana',
-            '--network', 'host',
+            '--net', 'host',
             '--restart', 'always',
             '-v', 'grafana:/var/lib/grafana:rw',
             'grafana/grafana:8.0.3']
