@@ -204,7 +204,7 @@ def handle_container(conf, container_name):
 
 def get_conf(args=None):
     parser = argparse.ArgumentParser()
-    parser.add_argument('container', nargs='+', type=check_container)
+    parser.add_argument('container', nargs='+')
     parser.add_argument(
         '--format',
         '-f',
@@ -226,7 +226,10 @@ def get_conf(args=None):
 def main():
     logging.basicConfig(level=logging.INFO)
     conf = get_conf()
+    container_names = []
     for container_name in conf.container:
+        container_names.append(check_container(container_name))
+    for container_name in container_names:
         handle_container(conf, container_name)
 
 
