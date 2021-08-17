@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import logging
 import argparse
 import json
 import subprocess
@@ -9,6 +10,9 @@ try:
     has_yaml = True
 except ImportError:
     has_yaml = False
+
+
+LOG = logging.getLogger(__name__)
 
 
 def get_inspect_json(resource):
@@ -79,7 +83,8 @@ class YamlFormatter(BaseFormatter):
 
 class Container:
 
-    def __init__(self, container, image=None):
+    def __init__(self, conf, container, image=None):
+        self.conf = conf
         self.container = container
         self._config = container['Config']
         self._host_config = container['HostConfig']
@@ -145,7 +150,8 @@ class Container:
         for bind in self._host_config['Binds'] or []:
             cmds.extend(['-v', bind])
 
-        image_name = self._config['Image']
+        image_name = (
+            self.conf.image if self.conf.image else self._config['Image'])
         cmds.append(image_name)
         if self._config['Cmd'] != self._image_config['Cmd']:
             cmds.extend(self._config['Cmd'])
@@ -158,6 +164,9 @@ def get_formatters():
     for clazz in BaseFormatter.__subclasses__():
         formatters[clazz.name()] = clazz
     return formatters
+
+
+FORMATTERS = get_formatters()
 
 
 def check_container(value):
@@ -175,25 +184,50 @@ def check_container(value):
     return container_name
 
 
-def main():
-    formatters = get_formatters()
+def handle_container(conf, container_name):
+    container = get_container(container_name)
+    image_name = container['Config']['Image']
+    image = get_image(image_name)
+    container_obj = Container(conf, container, image)
+    cmds = container_obj.get_cmds()
+    print(FORMATTERS[conf.format](cmds).format())
+    if conf.create:
+        LOG.info("Try to delete the container before create...")
+        subprocess.call(['docker', 'rm', '--force', container_name])
+        LOG.info("Container %s is deleted successfully.",
+                 container_name)
+        LOG.info("Try to start the container...")
+        subprocess.call(cmds)
+        LOG.info("Container %s is recreated successfully.",
+                 container_name)
+
+
+def get_conf(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument('container', nargs='+', type=check_container)
     parser.add_argument(
-            '--format',
-            '-f',
-            choices=formatters.keys(),
-            default='string',
-            help='Output format')
+        '--format',
+        '-f',
+        choices=FORMATTERS.keys(),
+        default='string',
+        help='Output format')
+    parser.add_argument(
+        '-c', '--create',
+        action='store_true',
+        help='re-create the container')
+    parser.add_argument(
+        '--image',
+        help='override the image parameter')
 
-    conf = parser.parse_args()
+    conf = parser.parse_args(args)
+    return conf
 
+
+def main():
+    logging.basicConfig(level=logging.INFO)
+    conf = get_conf()
     for container_name in conf.container:
-        container = get_container(container_name)
-        image_name = container['Config']['Image']
-        image = get_image(image_name)
-        container_obj = Container(container, image)
-        print(formatters[conf.format](container_obj.get_cmds()).format())
+        handle_container(conf, container_name)
 
 
 if __name__ == "__main__":

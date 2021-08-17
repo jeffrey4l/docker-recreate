@@ -18,7 +18,8 @@ class MainTest(unittest.TestCase):
     def test_a(self):
         container_json = self.get_json_file('grafana-container.json')
         image_json = self.get_json_file('grafana-image.json')
-        container = main.Container(container_json, image_json)
+        conf = main.get_conf(['grafana'])
+        container = main.Container(conf, container_json, image_json)
         cmds = container.get_cmds()
         expected = [
             'docker', 'run', '-d',
