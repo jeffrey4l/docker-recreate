@@ -145,7 +145,10 @@ class Container:
         image_envs = self._image_config['Env'] or {}
 
         for env in set(container_envs) - set(image_envs):
-            cmds.extend(['-e', env])
+            if ' ' in env:
+                cmds.extend(['-e', '"{}"'.format(env)])
+            else:
+                cmds.extend(['-e', env])
 
         for bind in self._host_config['Binds'] or []:
             cmds.extend(['-v', bind])

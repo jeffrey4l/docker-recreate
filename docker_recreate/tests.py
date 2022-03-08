@@ -2,7 +2,7 @@ import json
 import unittest
 import os
 
-from docker_recreate import main
+from docker_recreate import cli
 
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -18,8 +18,8 @@ class MainTest(unittest.TestCase):
     def test_a(self):
         container_json = self.get_json_file('grafana-container.json')
         image_json = self.get_json_file('grafana-image.json')
-        conf = main.get_conf(['grafana'])
-        container = main.Container(conf, container_json, image_json)
+        conf = cli.get_conf(['grafana'])
+        container = cli.Container(conf, container_json, image_json)
         cmds = container.get_cmds()
         expected = [
             'docker', 'run', '-d',
