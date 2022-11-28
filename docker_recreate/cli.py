@@ -180,11 +180,16 @@ def check_container(value):
         raise argparse.ArgumentTypeError(
                 'Can not found container name "%s"' % value)
     containers = output.decode('utf8').split()
-    if len(containers) > 1:
+    if len(containers) == 1:
+        return containers[0]
+    elif len(containers) > 1:
+        for container in containers:
+            if container == 'value':
+                return value
         msg = 'Found multi container for name "%s": %s' % (value, containers)
         raise argparse.ArgumentTypeError(msg)
-    container_name = containers[0]
-    return container_name
+    raise argparse.ArgumentTypeError(
+        'Can not find container with name: %s', value)
 
 
 def handle_container(conf, container_name):
