@@ -184,7 +184,7 @@ def check_container(value):
         return containers[0]
     elif len(containers) > 1:
         for container in containers:
-            if container == 'value':
+            if container == value:
                 return value
         msg = 'Found multi container for name "%s": %s' % (value, containers)
         raise argparse.ArgumentTypeError(msg)
