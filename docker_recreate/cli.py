@@ -90,7 +90,6 @@ class Container:
         self._host_config = container['HostConfig']
         self.image = image
         self._image_config = image['Config']
-        self._image_host_config = image['ContainerConfig']
 
     def get_container_name(self):
         name = self.container['Name']
